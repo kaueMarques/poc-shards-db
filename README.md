@@ -41,8 +41,8 @@ A fórmula baseia-se na multiplicação de **Tarefas x Shards** (`Tasks * Shards
 Para maximizar o *throughput* (vazão de processamento) e garantir que a aplicação possa escalar sob alta carga, adotamos um modelo multithread no processamento dos eventos.
 
 - A aplicação principal possui a anotação `@EnableAsync`, ativando o suporte à execução de processos em background via pools de threads gerenciadas pelo próprio Spring Boot.
-- Na camada de serviço, a classe responsável pela persistência real (como o `ShardWorker`) utiliza a anotação `@Async`.
-- **Funcionamento da Thread:** Quando a requisição REST chega no servidor embarcado (Tomcat), o roteador decide os shards de destino e repassa o comando para o service. Como o método é assíncrono, a thread principal da requisição web (HTTP request thread) é liberada quase que imediatamente para atender novos clientes externos. Simultaneamente, o Spring Boot aloca *threads internas em background* para estabelecer a comunicação JDBC e executar os `INSERT`s nos bancos de dados paralelos sem bloquear a camada web.
+- Na camada de serviço, a classe responsável pela persistência real (como o `ShardWorker`) utiliza a anotação `@Async` recebendo o ID exato de um shard.
+- **Isolamento por Thread:** A regra de ouro aqui é que **cada thread é responsável por um shard específico e único**. Quando a requisição REST chega, o roteador repassa o comando determinando o destino (ex: shards A e C). O Spring Boot não usa uma thread genérica para gravar nos dois: ele aloca uma thread *exclusiva para o Shard A* e uma *outra thread exclusiva para o Shard C*. Isso garante que a latência de um banco de dados nunca interfira na gravação do outro e que a thread web principal (HTTP) seja liberada instantaneamente.
 
 ## 5. Como Testar End-to-End (E2E)
 
