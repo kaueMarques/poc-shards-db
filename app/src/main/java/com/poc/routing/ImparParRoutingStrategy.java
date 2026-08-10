@@ -16,10 +16,10 @@ public class ImparParRoutingStrategy implements RoutingStrategy {
             System.out.println("DEBUG: Routing payload: " + payload);
             var node = mapper.readTree(payload);
             System.out.println("DEBUG: Parsed node: " + node);
-            int id = node.has("id") ? node.get("id").asInt() : 0;
-            System.out.println("DEBUG: Parsed ID: " + id);
+            String type = node.has("routing_type") ? node.get("routing_type").asText() : "";
+            System.out.println("DEBUG: Parsed Routing Type: " + type);
             
-            if (id % 2 == 0) {
+            if ("PAR".equals(type)) {
                 return evenHourShards;
             }
             return oddHourShards;

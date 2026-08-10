@@ -164,6 +164,7 @@ def interactive_menu():
         print("14. Send Generic Payload to /process")
         print("12. Exit")
         print("15. Run Full Load Test (11 records)")
+        print("16. Testar Rotas Consolidadas (/impar e /par)")
         choice = input("Select an option: ")
         
         if choice == '1': startup()
@@ -179,6 +180,7 @@ def interactive_menu():
         elif choice == '13': check_shard_counts()
         elif choice == '14': send_generic_payload()
         elif choice == '15': run_full_load_test()
+        elif choice == '16': test_impar_par_routes()
         elif choice == '12':
             print("Exiting.")
             break
@@ -213,11 +215,23 @@ def format_api_response(json_str):
         print("\n+" + "-"*75 + "+")
         print(f"| {'API RESPONSE':^73} |")
         print("+" + "-"*15 + "+" + "-"*57 + "+")
-        print(f"| {'Status':<13} | {data.get('status', 'N/A'):<55} |")
-        print(f"| {'Shards':<13} | {', '.join(data.get('shards', [])):<55} |")
+        status_val = data.get('status')
+        shards_val = data.get('shards', data.get('shards_queried', []))
+        print(f"| {'Status':<13} | {str(status_val if status_val else 'consolidated'):<55} |")
+        print(f"| {'Shards':<13} | {', '.join(shards_val):<55} |")
         
         results = data.get('results', {})
-        if results:
+        consolidated = data.get('consolidated_data')
+        total_records = data.get('total_records')
+
+        if total_records is not None:
+            print(f"| {'Total Records':<13} | {str(total_records):<55} |")
+
+        if consolidated:
+            print("+" + "-"*15 + "+" + "-"*57 + "+")
+            print(f"| {'Result (All)':<13} | {str(consolidated[:2]) + ('...' if len(consolidated)>2 else ''):<55} |")
+            print("+" + "-"*15 + "+" + "-"*57 + "+")
+        elif results:
             print("+" + "-"*15 + "+" + "-"*57 + "+")
             print(f"| {'Shard':<13} | {'Result':<55} |")
             print("+" + "-"*15 + "+" + "-"*57 + "+")
@@ -242,6 +256,61 @@ def run_full_load_test():
             print(f"Error: {e}")
         time.sleep(1)
     check_shard_counts()
+
+def test_impar_par_routes():
+    import urllib.request
+    import json
+    import csv
+
+    all_records = []
+
+    print("\n--- Testando recuperação paralela Ímpar (/impar) ---")
+    try:
+        req = urllib.request.Request("http://localhost:8080/impar")
+        with urllib.request.urlopen(req) as response:
+            resp_text = response.read().decode('utf-8')
+            format_api_response(resp_text)
+            data = json.loads(resp_text)
+            if 'consolidated_data' in data:
+                for item in data['consolidated_data']:
+                    record = json.loads(item['record'])
+                    record['_shard'] = item['shard']
+                    all_records.append(record)
+    except Exception as e:
+        print(f"Error: {e}")
+
+    print("\n--- Testando recuperação paralela Par (/par) ---")
+    try:
+        req = urllib.request.Request("http://localhost:8080/par")
+        with urllib.request.urlopen(req) as response:
+            resp_text = response.read().decode('utf-8')
+            format_api_response(resp_text)
+            data = json.loads(resp_text)
+            if 'consolidated_data' in data:
+                for item in data['consolidated_data']:
+                    record = json.loads(item['record'])
+                    record['_shard'] = item['shard']
+                    all_records.append(record)
+    except Exception as e:
+        print(f"Error: {e}")
+
+    if all_records:
+        csv_filename = "relatorio_consolidado.csv"
+        with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['API_Route_Shard', 'DB_Persisted_Shard', 'Routing_Type', 'ID', 'Data', 'Persisted_At'])
+            for record in sorted(all_records, key=lambda x: x.get('id', 0)):
+                writer.writerow([
+                    record.get('_shard', 'N/A'),
+                    record.get('shard_destination', 'N/A'),
+                    record.get('routing_type', 'N/A'),
+                    record.get('id', 'N/A'),
+                    record.get('data', 'N/A'),
+                    record.get('persisted_at', 'N/A')
+                ])
+        print(f"\n[OK] CSV '{csv_filename}' gerado com sucesso contendo {len(all_records)} registros!")
+
+
 def send_generic_event():
     filename = input("Enter JSON filename: ")
     EventManager().send_generic_event(filename)

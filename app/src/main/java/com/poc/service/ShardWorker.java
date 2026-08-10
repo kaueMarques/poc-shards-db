@@ -36,6 +36,14 @@ public class ShardWorker {
         return CompletableFuture.supplyAsync(() -> repository.process(shardId, data), executor);
     }
 
+    public CompletableFuture<java.util.List<String>> findAll(String shardId) {
+        ExecutorService executor = shardExecutors.get(shardId.toUpperCase());
+        if (executor == null) {
+            return CompletableFuture.completedFuture(java.util.Collections.emptyList());
+        }
+        return CompletableFuture.supplyAsync(() -> repository.findAll(shardId), executor);
+    }
+
     @PreDestroy
     public void shutdown() {
         shardExecutors.values().forEach(ExecutorService::shutdown);
