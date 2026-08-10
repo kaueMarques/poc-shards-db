@@ -41,8 +41,8 @@ A fórmula baseia-se na multiplicação de **Tarefas x Shards** (`Tasks * Shards
 Para maximizar o *throughput* (vazão de processamento) e garantir que a aplicação possa escalar sob alta carga, adotamos um modelo multithread no processamento dos eventos.
 
 - A aplicação principal possui a anotação `@EnableAsync`, ativando o suporte à execução de processos em background via pools de threads gerenciadas pelo próprio Spring Boot.
-- Na camada de serviço, a classe responsável pela persistência real (como o `ShardWorker`) utiliza a anotação `@Async` recebendo o ID exato de um shard.
-- **Isolamento por Thread:** A regra de ouro aqui é que **cada thread é responsável por um shard específico e único**. Quando a requisição REST chega, o roteador repassa o comando determinando o destino (ex: shards A e C). O Spring Boot não usa uma thread genérica para gravar nos dois: ele aloca uma thread *exclusiva para o Shard A* e uma *outra thread exclusiva para o Shard C*. Isso garante que a latência de um banco de dados nunca interfira na gravação do outro e que a thread web principal (HTTP) seja liberada instantaneamente.
+- Na camada de serviço, a classe responsável pela persistência (como o `ShardWorker`) utiliza a anotação `@Async`.
+- **Isolamento por Thread (Thread Affinity):** A regra fundamental desta arquitetura é que **cada thread é responsável por um shard específico**. Não há mistura de responsabilidades. Por exemplo: a **Thread 1** só fala com o **Shard A**, a **Thread 2** só fala com o **Shard B**, e assim por diante. Quando o roteador decide que um payload deve ir para os shards A e C, o Spring delega a gravação para a thread dedicada do Shard A e para a thread dedicada do Shard C, rodando em paralelo. Isso garante isolamento total: se o banco do Shard C ficar lento, ele afeta apenas a sua própria thread, sem impactar a Thread 1 que continua gravando no Shard A normalmente, liberando a requisição web principal instantaneamente.
 
 ## 5. Como Testar End-to-End (E2E)
 

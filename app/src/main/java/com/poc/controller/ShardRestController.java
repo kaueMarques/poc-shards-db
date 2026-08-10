@@ -1,6 +1,6 @@
 package com.poc.controller;
 
-import com.poc.repository.ShardRepository;
+import com.poc.service.ShardWorker;
 import com.poc.service.ShardRouter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class ShardRestController {
 
     @Autowired
-    private ShardRepository shardRepository;
+    private ShardWorker shardWorker;
 
     @Autowired
     private ShardRouter shardRouter;
@@ -24,7 +24,20 @@ public class ShardRestController {
     @PostMapping("/process")
     public ResponseEntity<Map<String, Object>> process(@RequestBody String data) {
         String[] shards = shardRouter.getStrategy("ImparPar").getShardDb(data);
-        Map<String, String> results = shardRepository.processAll(shards, data);
+        Map<String, String> results = new HashMap<>();
+        List<java.util.concurrent.CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (String shardId : shards) {
+            futures.add(shardWorker.processEvent(shardId, data).thenAccept(res -> {
+                if (res != null) {
+                    synchronized (results) {
+                        results.put(shardId, res);
+                    }
+                }
+            }));
+        }
+        
+        java.util.concurrent.CompletableFuture.allOf(futures.toArray(new java.util.concurrent.CompletableFuture[0])).join();
         
         Map<String, Object> response = new HashMap<>();
         response.put("data", data);

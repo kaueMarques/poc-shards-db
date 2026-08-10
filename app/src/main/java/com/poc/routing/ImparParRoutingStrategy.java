@@ -24,7 +24,6 @@ public class ImparParRoutingStrategy implements RoutingStrategy {
             }
             return oddHourShards;
         } catch (IOException e) {
-            // Fallback to default if parsing fails
             return oddHourShards;
         }
     }
