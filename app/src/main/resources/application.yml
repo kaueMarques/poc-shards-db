@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: shards-db-app
+
+database:
+  shards:
+    A:
+      url: ${SHARD_A_JDBC_URL}
+      username: user
+      password: password
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: ${POOL_SIZE}
+    B:
+      url: ${SHARD_B_JDBC_URL}
+      username: user
+      password: password
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: ${POOL_SIZE}
+    C:
+      url: ${SHARD_C_JDBC_URL}
+      username: user
+      password: password
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: ${POOL_SIZE}
+    D:
+      url: ${SHARD_D_JDBC_URL}
+      username: user
+      password: password
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: ${POOL_SIZE}
+app:
+  shards: A,B,C,D
+server:
+  port: 8080

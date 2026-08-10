@@ -1,0 +1,53 @@
+services:
+  shard-A:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shard-A
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+  shard-B:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shard-B
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+  shard-C:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shard-C
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+  shard-D:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shard-D
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - shard-A
+      - shard-B
+      - shard-C
+      - shard-D
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - SHARD_A_JDBC_URL=jdbc:postgresql://shard-A:5432/shard-A
+      - POOL_SIZE=10
+      - SHARD_B_JDBC_URL=jdbc:postgresql://shard-B:5432/shard-B
+      - SHARD_C_JDBC_URL=jdbc:postgresql://shard-C:5432/shard-C
+      - SHARD_D_JDBC_URL=jdbc:postgresql://shard-D:5432/shard-D
