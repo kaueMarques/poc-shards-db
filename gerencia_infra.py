@@ -202,7 +202,13 @@ def build_app():
     AppManager().build()
 
 def deploy_app():
-    print("App deployment is now run locally (e.g. java -jar target/shards-db-1.0-SNAPSHOT.jar)")
+    print("Starting Java Application locally...")
+    try:
+        subprocess.run(["java", "-jar", "target/shards-db-1.0-SNAPSHOT.jar"], check=True)
+    except KeyboardInterrupt:
+        print("\nApplication stopped.")
+    except Exception as e:
+        print(f"Failed to start app: {e}")
 
 
 
