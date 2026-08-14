@@ -1,37 +1,44 @@
 spring:
   application:
     name: shards-db-app
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:us-east-1}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID:test}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:test}
 
 database:
   shards:
     A:
-      url: ${SHARD_A_JDBC_URL}
+      url: ${SHARD_A_JDBC_URL:jdbc:postgresql://localhost:5432/shard-A}
       username: user
       password: password
       driver-class-name: org.postgresql.Driver
       hikari:
-        maximum-pool-size: ${POOL_SIZE}
+        maximum-pool-size: ${POOL_SIZE:5}
     B:
-      url: ${SHARD_B_JDBC_URL}
+      url: ${SHARD_B_JDBC_URL:jdbc:postgresql://localhost:5433/shard-B}
       username: user
       password: password
       driver-class-name: org.postgresql.Driver
       hikari:
-        maximum-pool-size: ${POOL_SIZE}
+        maximum-pool-size: ${POOL_SIZE:5}
     C:
-      url: ${SHARD_C_JDBC_URL}
+      url: ${SHARD_C_JDBC_URL:jdbc:postgresql://localhost:5434/shard-C}
       username: user
       password: password
       driver-class-name: org.postgresql.Driver
       hikari:
-        maximum-pool-size: ${POOL_SIZE}
+        maximum-pool-size: ${POOL_SIZE:5}
     D:
-      url: ${SHARD_D_JDBC_URL}
+      url: ${SHARD_D_JDBC_URL:jdbc:postgresql://localhost:5435/shard-D}
       username: user
       password: password
       driver-class-name: org.postgresql.Driver
       hikari:
-        maximum-pool-size: ${POOL_SIZE}
+        maximum-pool-size: ${POOL_SIZE:5}
 app:
   shards: A,B,C,D
 server:

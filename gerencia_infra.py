@@ -39,10 +39,6 @@ class InfraVerifier:
                 print(f"PostgreSQL SHARD 'shard-{shard}' is running.")
             else:
                 print(f"PostgreSQL SHARD 'shard-{shard}' ({expected_name}) NOT found or NOT running!")
-        if "infra_app_1" in running_containers:
-            print("Java App container 'app' is running.")
-        else:
-            print("Java App container 'app' NOT found or NOT running!")
         print("Verification complete.")
 
 class AppManager:
@@ -57,9 +53,6 @@ class AppManager:
             print(f"Build failed: {result.stderr}")
             return False
 
-    def deploy(self):
-        print("Deploying to container...")
-        subprocess.run(["docker-compose", "-f", COMPOSE_FILE, "build", "app"], check=True)
     def test_flow(self):
         # SQS test disabled as requested, but persistence check remains.
         # To show payload, let's use a sample.
@@ -127,16 +120,25 @@ def up(pool_size="5"):
     env['POOL_SIZE'] = pool_size
     subprocess.run(f"docker-compose -f {COMPOSE_FILE} up -d --force-recreate", env=env, shell=True)
 
+def down():
+    print("Stopping infrastructure...")
+    subprocess.run(f"docker-compose -f {COMPOSE_FILE} down", shell=True)
+
+def destroy():
+    print("Destroying infrastructure...")
+    subprocess.run(f"docker-compose -f {COMPOSE_FILE} down -v --remove-orphans", shell=True)
+
+def status():
+    print("Infrastructure status:")
+    subprocess.run(f"docker-compose -f {COMPOSE_FILE} ps", shell=True)
+
 def startup():
     print("\n[Step 1/2] Building application JAR...")
     if not AppManager().build():
         print("Build failed. Aborting startup.")
         return
 
-    print("\n[Step 2/2] Starting infrastructure and deploying app...")
-    print("Building app container...")
-    subprocess.run(f"docker-compose -f {COMPOSE_FILE} build app", shell=True)
-    print("Starting app and infrastructure...")
+    print("\n[Step 2/2] Starting infrastructure...")
     print("Cleaning up existing containers...")
     subprocess.run(f"docker-compose -f {COMPOSE_FILE} down -v --remove-orphans", shell=True)
     subprocess.run(f"docker-compose -f {COMPOSE_FILE} up -d", shell=True)
@@ -200,12 +202,8 @@ def build_app():
     AppManager().build()
 
 def deploy_app():
-    AppManager().deploy()
+    print("App deployment is now run locally (e.g. java -jar target/shards-db-1.0-SNAPSHOT.jar)")
 
-def send_and_verify_event():
-    msg = input("Enter event message: ")
-    EventManager().send_event(msg)
-    EventManager().verify_event()
 
 
 def format_api_response(json_str):
@@ -341,7 +339,7 @@ def main():
     elif args.command == "startup": startup()
     elif args.command == "build": build_app()
     elif args.command == "deploy": deploy_app()
-    elif args.command == "send-event": send_and_verify_event()
+    elif args.command == "send-event": send_generic_payload()
     else:
         interactive_menu()
 
