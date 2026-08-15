@@ -12,7 +12,7 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Grupo de Usuários">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Teste de Stress">
         <intProp name="ThreadGroup.num_threads">10</intProp>
         <intProp name="ThreadGroup.ramp_time">5</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -23,7 +23,7 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Massa de Dados (CSV)">
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Massa de Dados (CSV)" enabled="true">
           <stringProp name="delimiter">,</stringProp>
           <stringProp name="fileEncoding">UTF-8</stringProp>
           <stringProp name="filename">massa_dados.csv</stringProp>
@@ -35,7 +35,7 @@
           <stringProp name="variableNames">id,data</stringProp>
         </CSVDataSet>
         <hashTree/>
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Gerenciador de Cabeçalhos HTTP">
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Gerenciador de Cabeçalhos HTTP" enabled="true">
           <collectionProp name="HeaderManager.headers">
             <elementProp name="" elementType="Header">
               <stringProp name="Header.name">Content-Type</stringProp>
@@ -44,7 +44,7 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Requisição POST /process">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Requisição POST /process" enabled="true">
           <stringProp name="HTTPSampler.domain">localhost</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
@@ -67,7 +67,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="Árvore de Resultados">
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="Árvore de Resultados" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
